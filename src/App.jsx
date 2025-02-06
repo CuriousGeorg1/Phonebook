@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Person } from "./components/Person";
+import { Person, AddPerson } from "./components/Person";
+import { Search } from "./components/Search";
 
 const App = () => {
   const [persons, setPersons] = useState([
@@ -7,6 +8,7 @@ const App = () => {
   ]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleNewName = (event) => {
     console.log(event.target.value);
@@ -16,6 +18,10 @@ const App = () => {
   const handleNewNumber = (event) => {
     console.log(event.target.value);
     setNewNumber(event.target.value);
+  };
+
+  const handleSearchTerm = (event) => {
+    setSearchTerm(event.target.value);
   };
 
   const addPerson = (event) => {
@@ -43,22 +49,24 @@ const App = () => {
     }
   };
 
+  const filteredPersons = persons.filter((person) =>
+    person.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div style={{ paddingLeft: "30px" }}>
       <h2>Phonebook</h2>
-      <form onSubmit={addPerson}>
-        <div>
-          name: <input value={newName} onChange={handleNewName} />
-        </div>
-        <div>
-          number: <input value={newNumber} onChange={handleNewNumber} />
-        </div>
-        <div>
-          <button type="submit">add</button>
-        </div>
-      </form>
+      <Search searchTerm={searchTerm} handleSearchTerm={handleSearchTerm} />
+      <h2>Add a new</h2>
+      <AddPerson
+        newName={newName}
+        handleNewName={handleNewName}
+        newNumber={newNumber}
+        handleNewNumber={handleNewNumber}
+        addPerson={addPerson}
+      />
       <h2>Numbers</h2>
-      <Person persons={persons} />
+      <Person persons={filteredPersons} />
     </div>
   );
 };

@@ -20,4 +20,24 @@ const Card = ({ name, number }) => {
   );
 };
 
-export { Person, Card };
+const AddPerson = ({
+  newName,
+  handleNewName,
+  newNumber,
+  handleNewNumber,
+  addPerson,
+}) => (
+  <form onSubmit={addPerson}>
+    <div>
+      name: <input value={newName} onChange={handleNewName} />
+    </div>
+    <div>
+      number: <input value={newNumber} onChange={handleNewNumber} />
+    </div>
+    <div>
+      <button type="submit">add</button>
+    </div>
+  </form>
+);
+
+export { Person, Card, AddPerson };
