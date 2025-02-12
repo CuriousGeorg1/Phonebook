@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Person, AddPerson } from "./components/Person";
-import { Search } from "./components/Search";
+import { Person, AddPerson } from "./components/ui/Person";
+import { Search } from "./components/ui/Search";
+import contactService from "./services/contacts";
 import axios from "axios";
 
 const App = () => {
@@ -11,9 +12,8 @@ const App = () => {
 
   useEffect(() => {
     console.log("effect");
-    axios.get("http://localhost:3001/persons").then((response) => {
-      console.log("promise fulfilled");
-      setPersons(response.data);
+    contactService.getAll().then((response) => {
+      setPersons(response);
     });
   }, []);
 
@@ -50,9 +50,20 @@ const App = () => {
       alert("Invalid number");
     } else {
       console.log(personObject.name, personObject.number);
-      setPersons(persons.concat(personObject));
+      contactService.create(personObject).then((response) => {
+        setPersons(persons.concat(response));
+      });
       setNewName("");
       setNewNumber("");
+    }
+  };
+
+  const handleDelete = (id) => {
+    const person = persons.find((person) => person.id === id);
+    if (window.confirm(`Delete ${person.name}?`)) {
+      contactService.remove(id).then(() => {
+        setPersons(persons.filter((person) => person.id !== id));
+      });
     }
   };
 
@@ -73,7 +84,7 @@ const App = () => {
         addPerson={addPerson}
       />
       <h2>Numbers</h2>
-      <Person persons={filteredPersons} />
+      <Person persons={filteredPersons} onDelete={handleDelete} />
     </div>
   );
 };
