@@ -3,12 +3,14 @@ import { Person, AddPerson } from "./components/ui/Person";
 import { Search } from "./components/ui/Search";
 import contactService from "./services/contacts";
 import axios from "axios";
+import { Notification } from "./components/ui/Notification";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [actionMessage, setActionMessage] = useState(null);
 
   useEffect(() => {
     console.log("effect");
@@ -45,13 +47,31 @@ const App = () => {
           persons.some((person) => person.number === newNumber)
       )
     ) {
-      alert(`${newName} is already added to the phonebook`);
+      if (
+        window.confirm(
+          `${newName} is already added to the phonebook, replace the old number with a new one?`
+        )
+      ) {
+        const person = persons.find((person) => person.name === newName);
+        const changedPerson = { ...person, number: newNumber };
+        contactService.update(person.id, changedPerson).then((response) => {
+          setPersons(
+            persons.map((person) =>
+              person.id !== response.id ? person : response
+            )
+          );
+        });
+      }
     } else if (newNumber === "" || newNumber.length < 4) {
       alert("Invalid number");
     } else {
       console.log(personObject.name, personObject.number);
       contactService.create(personObject).then((response) => {
         setPersons(persons.concat(response));
+        setActionMessage(`Added ${newName}`);
+        setTimeout(() => {
+          setActionMessage(null);
+        }, 3000);
       });
       setNewName("");
       setNewNumber("");
@@ -75,7 +95,7 @@ const App = () => {
     <div style={{ paddingLeft: "30px" }}>
       <h2>Phonebook</h2>
       <Search searchTerm={searchTerm} handleSearchTerm={handleSearchTerm} />
-      <h2>Add a new</h2>
+      <h2>Add a new contact</h2>
       <AddPerson
         newName={newName}
         handleNewName={handleNewName}
@@ -83,6 +103,7 @@ const App = () => {
         handleNewNumber={handleNewNumber}
         addPerson={addPerson}
       />
+      <Notification message={actionMessage} />
       <h2>Numbers</h2>
       <Person persons={filteredPersons} onDelete={handleDelete} />
     </div>
