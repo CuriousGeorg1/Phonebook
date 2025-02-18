@@ -15,7 +15,12 @@ const App = () => {
   useEffect(() => {
     console.log("effect");
     contactService.getAll().then((response) => {
-      setPersons(response);
+      if (Array.isArray(response)) {
+        setPersons(response);
+      } else {
+        console.error("Expected an array but got:", response);
+        setPersons([]);
+      }
     });
   }, []);
 
@@ -80,16 +85,18 @@ const App = () => {
 
   const handleDelete = (id) => {
     const person = persons.find((person) => person.id === id);
-    if (window.confirm(`Delete ${person.name}?`)) {
+    if (person && window.confirm(`Delete ${person.name}?`)) {
       contactService.remove(id).then(() => {
         setPersons(persons.filter((person) => person.id !== id));
       });
     }
   };
 
-  const filteredPersons = persons.filter((person) =>
-    person.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPersons = Array.isArray(persons)
+    ? persons.filter((person) =>
+        person.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   return (
     <div style={{ paddingLeft: "30px" }}>
