@@ -9,17 +9,26 @@ const App = () => {
   const [persons, setPersons] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [actionMessage, setActionMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     console.log("fetching contacts...");
-    contactService.getAll().then((response) => {
-      if (Array.isArray(response)) {
-        setPersons(response);
-      } else {
-        console.error("Expected an array but got:", response);
-        setPersons([]);
-      }
-    });
+    contactService
+      .getAll()
+      .then((response) => {
+        if (Array.isArray(response)) {
+          setPersons(response);
+        } else {
+          console.error("Expected an array but got:", response);
+          setPersons([]);
+        }
+      })
+      .catch((error) => {
+        setErrorMessage("Failed to fetch contacts");
+        setTimeout(() => {
+          setErrorMessage(null);
+        }, 3000);
+      });
   }, []);
 
   const handleSearchTerm = (event) => {
@@ -43,40 +52,72 @@ const App = () => {
           (person) => person.name === personObject.name
         );
         const changedPerson = { ...person, number: personObject.number };
-        contactService.update(person.id, changedPerson).then((response) => {
-          setPersons(
-            persons.map((person) =>
-              person.id !== response.id ? person : response
-            )
-          );
-        });
+        contactService
+          .update(person.id, changedPerson)
+          .then((response) => {
+            setPersons(
+              persons.map((person) =>
+                person.id !== response.id ? person : response
+              )
+            );
+          })
+          .catch((error) => {
+            setErrorMessage(`Failed to update ${personObject.name}`);
+            setTimeout(() => {
+              setErrorMessage(null);
+            }, 3000);
+          });
       }
     } else if (personObject.number === "" || personObject.number.length < 4) {
       alert("Invalid number");
     } else {
-      await contactService.create(personObject).then((response) => {
-        const updatedPersons = contactService.getAll().then((response) => {
-          if (Array.isArray(response)) {
-            setPersons(response);
+      await contactService
+        .create(personObject)
+        .then((response) => {
+          const updatedPersons = contactService.getAll().then((response) => {
+            if (Array.isArray(response)) {
+              setPersons(response);
+            } else {
+              console.error("Expected an array but got:", response);
+              return [];
+            }
+          });
+          setActionMessage(`Added ${personObject.name}`);
+          setTimeout(() => {
+            setActionMessage(null);
+          }, 3000);
+        })
+        .catch((error) => {
+          if (
+            error.response &&
+            error.response.data &&
+            error.response.data.message
+          ) {
+            setErrorMessage(error.response.data.message);
           } else {
-            console.error("Expected an array but got:", response);
-            return [];
+            setErrorMessage(`Failed to add ${personObject.name}`);
           }
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 3000);
         });
-        setActionMessage(`Added ${personObject.name}`);
-        setTimeout(() => {
-          setActionMessage(null);
-        }, 3000);
-      });
     }
   };
 
   const handleDelete = (id) => {
     const person = persons.find((person) => person.id === id);
     if (person && window.confirm(`Delete ${person.name}?`)) {
-      contactService.remove(id).then(() => {
-        setPersons(persons.filter((person) => person.id !== id));
-      });
+      contactService
+        .remove(id)
+        .then(() => {
+          setPersons(persons.filter((person) => person.id !== id));
+        })
+        .catch((error) => {
+          setErrorMessage(`Failed to delete ${person.name}`);
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 3000);
+        });
     }
   };
 
@@ -91,6 +132,7 @@ const App = () => {
       <h2>Add a new contact</h2>
       <AddPerson addPerson={addPerson} />
       <Notification message={actionMessage} />
+      {errorMessage && <Notification message={errorMessage} />}
       <h2>Numbers</h2>
       <Person persons={filteredPersons} onDelete={handleDelete} />
     </div>
