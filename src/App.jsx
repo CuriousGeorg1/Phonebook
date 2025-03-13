@@ -3,7 +3,7 @@ import { Person } from "./components/ui/Person";
 import { AddPerson } from "./components/ui/AddPerson";
 import { Search } from "./components/ui/Search";
 import contactService from "./services/contacts";
-import { Notification } from "./components/ui/Notification";
+import { Notification, ErrorNotification } from "./components/ui/Notification";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
@@ -63,6 +63,7 @@ const App = () => {
           })
           .catch((error) => {
             setErrorMessage(`Failed to update ${personObject.name}`);
+            console.log(error);
             setTimeout(() => {
               setErrorMessage(null);
             }, 3000);
@@ -132,7 +133,7 @@ const App = () => {
       <h2>Add a new contact</h2>
       <AddPerson addPerson={addPerson} />
       <Notification message={actionMessage} />
-      {errorMessage && <Notification message={errorMessage} />}
+      {errorMessage && <ErrorNotification message={errorMessage} />}
       <h2>Numbers</h2>
       <Person persons={filteredPersons} onDelete={handleDelete} />
     </div>
